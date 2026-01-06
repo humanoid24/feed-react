@@ -9,6 +9,7 @@ interface Feed {
   id: number;
   name: string;
   content: string;
+  device_id: string;
   updatedAt: string;
 }
 
@@ -20,6 +21,14 @@ export default function Home() {
   const [contentInput, setContent] = useState<string>("");
   const [idFeed, setIdFeed] = useState<number | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitMessage, setLimitMessage] = useState("");
+
+
+
 
 
   useEffect(() => {
@@ -39,55 +48,78 @@ export default function Home() {
     }, []);
 
   const simpanFeed = async (): Promise<void> => {
-
     if (!deviceId) {
       alert("Device ID belum siap");
       return;
     }
 
-    await fetch("/api/feed", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: nameInput,
-        content: contentInput,
-        device_id: deviceId,
-      }),
-    });
+    setLoading(true);
 
-    resetForm();
+    try {
+      const res = await fetch("/api/feed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: nameInput,
+          content: contentInput,
+          device_id: deviceId,
+        }),
+      });
 
-    const respon = await fetch("/api/feed");
-    const hasil: Feed[] = await respon.json();
-    setTampilFeed(hasil);
+      const data = await res.json();
+
+      // 🚨 KENA LIMIT
+      if (!res.ok) {
+        setLimitMessage(data.error || "Limit posting tercapai");
+        setShowLimitModal(true);
+        return;
+      }
+
+      // ✅ Sukses
+      resetForm();
+
+      const respon = await fetch("/api/feed");
+      const hasil: Feed[] = await respon.json();
+      setTampilFeed(hasil);
+    } finally {
+      setLoading(false);
+    }
   };
+
 
 
   const updateFeed = async (): Promise<void> => {
     if (idFeed === null) return;
 
-    await fetch("/api/feed", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: idFeed,
-        name: nameInput,
-        content: contentInput,
-      }),
-    });
+    setLoading(true);
 
-    resetForm();
+    try {
+      await fetch("/api/feed", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: idFeed,
+          name: nameInput,
+          content: contentInput,
+          device_id: deviceId,
+        }),
+      });
 
-    const respon = await fetch("/api/feed");
-    const hasil: Feed[] = await respon.json();
-    setTampilFeed(hasil);
+      resetForm();
+
+      const respon = await fetch("/api/feed");
+      const hasil: Feed[] = await respon.json();
+      setTampilFeed(hasil);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deleteFeed = async (id: number): Promise<void> => {
     await fetch("/api/feed", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, device_id: deviceId }),
     });
 
     const respon = await fetch("/api/feed");
@@ -119,7 +151,7 @@ export default function Home() {
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold sm:text-4xl text-black">
-              Apa yang sedang kamu pikirkan?
+              Apa yang lo pikirkan?
             </h2>
             {/* INPUT STATUS */}
             {/* INPUT STATUS */}
@@ -141,16 +173,51 @@ export default function Home() {
                       rows={3}
                       value={contentInput}
                       onChange={(e) => setContent(e.target.value)}
-                      placeholder="Apa yang sedang kamu pikirkan?"
+                      placeholder="Keluarin isi Unek-Unek lo?"
                       className="w-full p-3 text-sm border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     />
 
                     <div className="flex justify-end mt-3">
                       <button
                         onClick={idFeed ? updateFeed : simpanFeed}
-                        className="px-5 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                        disabled={loading}
+                        className={`px-5 py-2 text-sm font-semibold text-white rounded-lg
+                        ${
+                          loading
+                            ? "bg-blue-300 cursor-not-allowed"
+                            : "bg-blue-500 hover:bg-blue-600"
+                        }
+                      `}
                       >
-                        {idFeed ? "Update" : "Posting"}
+                        {loading ? (
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4 animate-spin"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                              />
+                            </svg>
+                            Loading...
+                          </span>
+                        ) : idFeed ? (
+                          "Update"
+                        ) : (
+                          "Posting"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -165,51 +232,56 @@ export default function Home() {
                 key={feeds.id}
                 className="relative p-6 bg-white rounded-lg shadow-md transition-transform hover:shadow-lg hover:-translate-y-1"
               >
-                <div className="absolute top-3 right-3 flex gap-2">
-                  {/* EDIT */}
-                  <button
-                    onClick={() => pilihEdit(feeds)}
-                    className="p-1 rounded hover:bg-blue-100 text-blue-600"
-                    title="Edit"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                {deviceId && feeds.device_id === deviceId && (
+                  <div className="absolute top-3 right-3 flex gap-2">
+                    {/* EDIT */}
+                    <button
+                      onClick={() => pilihEdit(feeds)}
+                      className="p-1 rounded hover:bg-blue-100 text-blue-600"
+                      title="Edit"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.232 5.232l3.536 3.536M9 11l6.232-6.232a2.5 2.5 0 013.536 3.536L12.536 14.536a2.5 2.5 0 01-1.768.732H9v-1.768a2.5 2.5 0 01.732-1.768z"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536M9 11l6.232-6.232a2.5 2.5 0 013.536 3.536L12.536 14.536a2.5 2.5 0 01-1.768.732H9v-1.768a2.5 2.5 0 01.732-1.768z"
+                        />
+                      </svg>
+                    </button>
 
-                  {/* DELETE */}
-                  <button
-                    onClick={() => deleteFeed(feeds.id)}
-                    className="p-1 rounded hover:bg-red-100 text-red-600"
-                    title="Hapus"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                    {/* DELETE */}
+                    <button
+                      onClick={() => {
+                        setDeleteId(feeds.id);
+                        setShowDeleteModal(true);
+                      }}
+                      className="p-1 rounded hover:bg-red-100 text-red-600"
+                      title="Hapus"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
 
                 <Link href={`/feed/${feeds.id}`}>
                   <div className="flex items-start mb-4 gap-3">
@@ -217,7 +289,9 @@ export default function Home() {
                       {feeds.name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-black pt-2">{feeds.name}</h3>
+                      <h3 className="font-bold text-black pt-2">
+                        {feeds.name}
+                      </h3>
                     </div>
                   </div>
                   <p className="text-gray-700">{feeds.content}</p>
@@ -241,6 +315,60 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              Hapus Postingan?
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Postingan ini akan dihapus permanen dan tidak bisa dikembalikan.
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
+              >
+                Batal
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (!deleteId) return;
+
+                  await deleteFeed(deleteId);
+                  setShowDeleteModal(false);
+                  setDeleteId(null);
+                }}
+                className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600"
+              >
+                Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              Limit Postingan
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-4">{limitMessage}</p>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+              >
+                Oke
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

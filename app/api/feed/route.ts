@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from '@/lib/supabase/server'
 
-const MAX_POST_PER_DEVICE = 2;
+const MAX_POST_PER_DEVICE = 1;
 const MAX_GLOBAL_POST = 200;
 
 export async function GET() {
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
 
   if ((deviceCount ?? 0) >= MAX_POST_PER_DEVICE) {
     return NextResponse.json(
-      { error: "Limit 3 posting untuk device ini tercapai" },
+      { error: "Limit 1 posting untuk device ini tercapai" },
       { status: 429 }
     );
   }
@@ -96,6 +96,7 @@ export async function PUT(req: Request) {
       content: bodyUpdate.content,
     })
     .eq("id", bodyUpdate.id)
+    .eq("device_id", bodyUpdate.device_id)
     .select()
     .single();
 
@@ -114,11 +115,12 @@ export async function DELETE(req: Request) {
   const bodyDelete = await req.json();
 
   const { data, error } = await supabase
-  .from("feed")
-  .delete()
-  .eq("id", bodyDelete.id)
-  .select()
-  .single();
+    .from("feed")
+    .delete()
+    .eq("id", bodyDelete.id)
+    .eq("device_id", bodyDelete.device_id)
+    .select()
+    .single();
   
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
