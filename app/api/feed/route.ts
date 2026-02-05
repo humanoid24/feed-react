@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from '@/lib/supabase/server'
 
-const MAX_POST_PER_DEVICE = 99;
+const MAX_POST_PER_DEVICE = 1;
 const MAX_GLOBAL_POST = 200;
 
 export async function GET() {
