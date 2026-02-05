@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import FeedActionsClient from "./FeedLikeAction";
-import FeedComment from "./FeedComment";
+import FeedActions from "./Like/FeedLike";
+import FeedComment from "./Komentar/FeedComment";
 
 interface PageProps {
   params: {
@@ -34,7 +34,7 @@ export default async function Detail({ params }: PageProps) {
   // const feedDate = new Date(feedData.updatedAt).toLocaleDateString();
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center pt-16 pb-16 px-3 sm:px-0">
+    <div className="bg-gray-100 flex justify-center pt-16 pb-16 px-3 sm:px-0 flex-1">
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm border px-4 py-4 sm:px-5 flex flex-col min-h-[420px]">
         {/* HEADER */}
         <div>
@@ -55,16 +55,13 @@ export default async function Detail({ params }: PageProps) {
         </div>
 
         {/* SPACER ATAS */}
-        <div className="flex-1" />
+        {/* <div className="flex-1" /> */}
 
         {/* DIVIDER */}
-        <div className="border-t border-gray-200" />
+        {/* <div className="border-t border-gray-200" /> */}
 
         {/* LIKE & COMMENT */}
-        <FeedActionsClient feedId={feedId} />
-
-        {/* SPACER BAWAH */}
-        <div className="flex-1" />
+        <FeedActions feedId={feedId} />
 
         {/* COMMENT SECTION */}
         <FeedComment feedId={feedId} />

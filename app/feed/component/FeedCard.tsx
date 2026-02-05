@@ -77,7 +77,7 @@ export default function FeedCard({
     };
 
   return (
-    <div className="relative p-6 bg-white rounded-lg shadow-md hover:-translate-y-1 transition">
+    <div className="relative p-6 bg-white rounded-lg shadow-md hover:-translate-y-1 transition flex flex-col h-full">
       {deviceId === feeds.device_id && (
         <div className="absolute top-3 right-3 flex gap-2">
           <button
@@ -125,8 +125,8 @@ export default function FeedCard({
         </div>
       )}
 
-      <Link href={`/feed/${feeds.id}`}>
-        <div className="flex gap-3 mb-3">
+      <Link href={`/feed/${feeds.id}`} className="flex-1">
+        <div className="flex gap-3 mb-3 items-center">
           <div className="w-10 h-10 bg-blue-500 text-white flex items-center justify-center rounded-full">
             {feeds.name.charAt(0)}
           </div>
@@ -138,7 +138,7 @@ export default function FeedCard({
 
       <button
         onClick={toggleLike}
-        className="mt-3 flex items-center gap-1 text-sm text-black"
+        className="mt-4 flex items-center gap-1 text-sm text-black self-start"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

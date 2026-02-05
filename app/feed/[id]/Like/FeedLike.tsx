@@ -1,15 +1,21 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState } from "react";
+import { getDeviceId } from "@/lib/utils/device";
 
 type Props = {
   feedId: number;
-  deviceId: string | null;
 };
 
-export default function FeedActions({ feedId, deviceId }: Props) {
+export default function FeedActions({ feedId }: Props) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+  
+    useEffect(() => {
+      setDeviceId(getDeviceId());
+    }, []);
 
   useEffect(() => {
     if (!deviceId) return;
@@ -50,7 +56,7 @@ export default function FeedActions({ feedId, deviceId }: Props) {
   };
 
   return (
-    <div className="py-2 flex items-center justify-center gap-10 text-sm">
+    <div className="py-2 flex gap-10 text-sm pt-5">
       {/* LIKE */}
       <button
         onClick={toggleLike}
