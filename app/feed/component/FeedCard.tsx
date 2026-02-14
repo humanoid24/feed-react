@@ -136,28 +136,47 @@ export default function FeedCard({
         <p className="text-gray-700">{truncateWords(feeds.content, 32)}</p>
       </Link>
 
-      <button
-        onClick={toggleLike}
-        className="mt-4 flex items-center gap-1 text-sm text-black self-start"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`h-6 w-6 ${
-            liked ? "text-red-500 fill-red-500" : "text-red-500 fill-white"
-          }`}
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="2"
+      <div className="mt-4 flex items-center gap-4 text-sm text-black">
+        <button
+          onClick={toggleLike}
+          className="flex items-center gap-1 text-sm text-black self-start"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-          />
-        </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className={`h-6 w-6 ${
+              liked ? "text-red-500 fill-red-500" : "text-red-500 fill-white"
+            }`}
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
 
-        <span>{likeCount}</span>
-      </button>
+          <span>{likeCount}</span>
+        </button>
+
+        <button className="flex items-center gap-1">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-blue-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 20l1.8-3.6A7.963 7.963 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
